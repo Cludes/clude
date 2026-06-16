@@ -204,22 +204,39 @@ STRIPE_SECRET_KEY=</pre>
           <div class="step-num" aria-hidden="true">1</div>
           <div class="step-content">
             <h3>Install</h3>
-            <pre class="code-block"><code>pip install clude</code></pre>
-            <p class="step-note">Then run <code>clude</code>. If your shell can't find it, use <code>python -m clude</code> - works on any OS with no PATH setup. For an isolated install that's always on PATH, use <code>pipx install clude</code>.</p>
+            <pre class="code-block"><code>pip install clude
+
+# optional: isolated install that's always on PATH
+pipx install clude</code></pre>
+            <p class="step-note">Requires Python 3.10+. Works on Windows, macOS, and Linux.</p>
           </div>
         </div>
 
         <div class="step">
           <div class="step-num" aria-hidden="true">2</div>
           <div class="step-content">
-            <h3>Point it at your workspace</h3>
-            <pre class="code-block"><code>clude fleet audit ~/Documents
-clude log week ~/Documents</code></pre>
+            <h3>Run it</h3>
+            <pre class="code-block"><code>clude --version
+
+# if your shell can't find "clude", this always works:
+python -m clude --version</code></pre>
+            <p class="step-note">The bare <code>clude</code> command needs Python's Scripts directory on your PATH - pip prints its location during install, or use <code>pipx</code> which sets it up for you. <code>python -m clude</code> works anywhere with no PATH setup.</p>
           </div>
         </div>
 
         <div class="step">
           <div class="step-num" aria-hidden="true">3</div>
+          <div class="step-content">
+            <h3>Point it at your workspace</h3>
+            <pre class="code-block"><code>clude fleet audit ~/Documents
+clude log week ~/Documents
+clude env scan ~/Documents/my-project</code></pre>
+            <p class="step-note">On Windows <code>cmd.exe</code> use a full path like <code>%USERPROFILE%\Documents</code> - cmd doesn't expand <code>~</code>. PowerShell, macOS, and Linux expand it fine.</p>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num" aria-hidden="true">4</div>
           <div class="step-content">
             <h3>Optional: GitHub enrichment</h3>
             <pre class="code-block"><code>export GITHUB_TOKEN=ghp_...
