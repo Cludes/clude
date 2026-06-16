@@ -6,6 +6,7 @@ build-backend = "hatchling.build"
 name = "clude"
 version = "0.1.0"
 description = "Developer workspace CLI - env auditing, multi-repo health, and git activity"
+readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }
 dependencies = [
