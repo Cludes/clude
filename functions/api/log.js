@@ -21,9 +21,10 @@ export async function onRequest(context) {
   const headers = ghHeaders(token);
   const since = new Date(Date.now() - days * 86400000).toISOString().split('T')[0]; // YYYY-MM-DD
 
-  // Search Commits API: supports author + date range, returns up to 100 per page
-  // Unauthenticated: 10 req/min. Authenticated: 30 req/min.
-  const url = `https://api.github.com/search/commits?q=author:${encodeURIComponent(user)}+author-date:>=${since}&sort=author-date&order=desc&per_page=100`;
+  // Search Commits API: author: scopes by git author identity, user: restricts to repos owned by
+  // this GitHub account - prevents picking up mirror/fork repos authored by a different identity
+  // with the same name.
+  const url = `https://api.github.com/search/commits?q=author:${encodeURIComponent(user)}+user:${encodeURIComponent(user)}+author-date:>=${since}&sort=author-date&order=desc&per_page=100`;
 
   const resp = await fetch(url, { headers });
 
@@ -46,6 +47,7 @@ export async function onRequest(context) {
     if (!repo) continue;
     if (!byRepo[repo]) byRepo[repo] = [];
     byRepo[repo].push({
+      sha: item.sha,
       hash: item.sha.slice(0, 7),
       message: (item.commit.message || '').split('\n')[0].slice(0, 80),
       date: item.commit.author?.date || item.commit.committer?.date,

@@ -159,15 +159,18 @@
 
       repoNames.forEach(function (repo) {
         var commits = data.by_repo[repo];
+        var repoUrl = 'https://github.com/' + encodeURIComponent(repo).replace('%2F', '/');
         addLine(out,
-          sp('tc bold', esc(repo)) + ' ' +
+          '<a class="term-link" href="' + esc(repoUrl) + '" target="_blank" rel="noopener noreferrer">' +
+          sp('tc bold', esc(repo)) + '</a>' + ' ' +
           sp('td', '(' + commits.length + ' commit' + (commits.length !== 1 ? 's' : '') + ')')
         );
         commits.forEach(function (c) {
           var d = new Date(c.date).toLocaleDateString('en', { weekday: 'short', month: 'short', day: 'numeric' });
+          var commitUrl = 'https://github.com/' + encodeURIComponent(repo).replace('%2F', '/') + '/commit/' + esc(c.sha);
           addLine(out,
             '  ' + sp('td', pE(12, d)) +
-            '  ' + sp('ty', esc(c.hash)) +
+            '  <a class="term-link" href="' + commitUrl + '" target="_blank" rel="noopener noreferrer">' + sp('ty', esc(c.hash)) + '</a>' +
             '  ' + esc(c.message)
           );
         });

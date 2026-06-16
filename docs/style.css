@@ -500,6 +500,8 @@ section { padding: 5rem 2rem; }
   flex-shrink: 0;
 }
 .term-run:hover { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, transparent); }
+.term-link { color: inherit; text-decoration: none; }
+.term-link:hover { text-decoration: underline; text-decoration-color: var(--accent); }
 .tm   { color: #d2a8ff; }  /* purple for ref counts */
 .bold { font-weight: 700; }
 
