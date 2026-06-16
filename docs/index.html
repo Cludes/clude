@@ -17,6 +17,7 @@
       <div class="nav-links">
         <a href="#features">Features</a>
         <a href="#usage">Usage</a>
+        <a href="#demo">Demo</a>
         <a href="#install">Install</a>
         <a href="https://github.com/Cludes/clude" target="_blank" rel="noopener noreferrer" class="nav-gh">GitHub &nearr;</a>
       </div>
@@ -155,6 +156,44 @@ STRIPE_SECRET_KEY=</pre>
       </div>
     </section>
 
+    <section class="live-demo" id="demo" aria-labelledby="demo-heading">
+      <h2 class="section-title" id="demo-heading">Try it live</h2>
+      <p class="demo-sub">Run commands against any public GitHub account directly in your browser - no install needed.</p>
+      <div class="demo-wrap">
+        <div class="demo-terminal">
+          <div class="term-bar">
+            <span class="dot dot-red" aria-hidden="true"></span>
+            <span class="dot dot-yellow" aria-hidden="true"></span>
+            <span class="dot dot-green" aria-hidden="true"></span>
+            <span class="term-title">clude web terminal</span>
+          </div>
+          <div class="term-output" id="term-output" aria-live="polite" aria-label="Terminal output" role="log">
+            <div class="term-line"><span class="td">Click an example or type a command below.</span></div>
+            <div class="term-line">&nbsp;</div>
+            <div class="term-line"><span class="td">Examples (click to load):</span></div>
+            <div class="term-line term-example" data-cmd="fleet audit torvalds"><span class="tp">$</span> clude <span class="tc">fleet audit</span> torvalds</div>
+            <div class="term-line term-example" data-cmd="log week torvalds"><span class="tp">$</span> clude <span class="tc">log week</span> torvalds</div>
+            <div class="term-line term-example" data-cmd="env scan Cludes/clude"><span class="tp">$</span> clude <span class="tc">env scan</span> Cludes/clude</div>
+            <div class="term-line">&nbsp;</div>
+          </div>
+          <form class="term-form" id="term-form" autocomplete="off">
+            <label class="term-prompt" for="term-input"><span class="tp">$</span> clude</label>
+            <input
+              type="text"
+              id="term-input"
+              class="term-input"
+              placeholder="fleet audit &lt;username&gt;"
+              aria-label="Enter a clude command"
+              spellcheck="false"
+              autocorrect="off"
+              autocapitalize="off"
+            >
+            <button type="submit" class="term-run">Run</button>
+          </form>
+        </div>
+      </div>
+    </section>
+
     <section class="get-started" id="install" aria-labelledby="install-heading">
       <h2 class="section-title" id="install-heading">Get started in seconds</h2>
       <div class="steps">
@@ -205,5 +244,6 @@ clude fleet audit --github-user yourname</code></pre>
   </footer>
 
   <script src="app.js"></script>
+  <script src="terminal.js"></script>
 </body>
 </html>

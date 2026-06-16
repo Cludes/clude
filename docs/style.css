@@ -422,6 +422,87 @@ section { padding: 5rem 2rem; }
 .footer-inner a { color: var(--muted); }
 .footer-inner a:hover { color: var(--text); }
 
+/* ─── Live demo ─────────────────────────────────────────────── */
+.live-demo { border-bottom: 1px solid var(--border); }
+.demo-sub {
+  text-align: center;
+  color: var(--muted);
+  font-size: 1rem;
+  margin-top: -1.5rem;
+  margin-bottom: 2.5rem;
+}
+.demo-wrap { max-width: 900px; margin: 0 auto; }
+.demo-terminal {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.5);
+}
+.term-output {
+  font-family: var(--mono);
+  font-size: 0.8rem;
+  line-height: 1.6;
+  padding: 1.25rem 1.25rem 0.5rem;
+  min-height: 200px;
+  max-height: 400px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+.term-line { display: block; min-height: 1.4em; }
+.term-example {
+  cursor: pointer;
+  border-radius: 3px;
+  padding: 1px 4px;
+  margin-left: -4px;
+  transition: background 0.1s;
+}
+.term-example:hover { background: color-mix(in srgb, var(--accent) 10%, transparent); }
+.term-form {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  border-top: 1px solid var(--border);
+  background: var(--surface-2);
+}
+.term-prompt {
+  font-family: var(--mono);
+  font-size: 0.85rem;
+  color: var(--muted);
+  white-space: nowrap;
+  flex-shrink: 0;
+  cursor: default;
+}
+.term-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 0.85rem;
+  caret-color: var(--accent);
+  min-width: 0;
+}
+.term-input::placeholder { color: var(--muted); opacity: 0.6; }
+.term-input:disabled { opacity: 0.5; }
+.term-run {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-size: 0.8rem;
+  padding: 0.3rem 0.8rem;
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+  flex-shrink: 0;
+}
+.term-run:hover { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, transparent); }
+.tm   { color: #d2a8ff; }  /* purple for ref counts */
+.bold { font-weight: 700; }
+
 /* ─── Responsive ────────────────────────────────────────── */
 @media (max-width: 960px) {
   .hero { grid-template-columns: 1fr; gap: 2.5rem; }
