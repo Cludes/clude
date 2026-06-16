@@ -103,8 +103,10 @@
 
       repos.slice(0, 25).forEach(function (r) {
         var pushed = r.pushed_at ? relTime(new Date(r.pushed_at)) : 'never';
+        var repoUrl = 'https://github.com/' + esc(user) + '/' + esc(r.name);
         addLine(out,
-          sp('tc', pE(w, r.name)) +
+          '<a class="term-link" href="' + repoUrl + '" target="_blank" rel="noopener noreferrer">' +
+          sp('tc', pE(w, r.name)) + '</a>' +
           sp('td', pS(14, pushed)) +
           sp(r.open_issues > 0 ? 'ty' : 'tg', pS(9, r.open_issues)) +
           sp('td', pS(8, r.stars)) +
