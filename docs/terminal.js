@@ -117,9 +117,9 @@
       });
       if (repos.length > 25) addLine(out, sp('td', '... and ' + (repos.length - 25) + ' more'));
       addLine(out, '');
-    } catch (_) {
+    } catch (err) {
       loading.remove();
-      addLine(out, sp('tr', 'Request failed'));
+      addLine(out, sp('tr', 'Request failed: ' + esc(err.message || String(err))));
     }
   }
 
@@ -180,9 +180,9 @@
         });
         addLine(out, '');
       });
-    } catch (_) {
+    } catch (err) {
       loading.remove();
-      addLine(out, sp('tr', 'Request failed'));
+      addLine(out, sp('tr', 'Request failed: ' + esc(err.message || String(err))));
     }
   }
 
@@ -238,9 +238,9 @@
       addLine(out, '');
       var totalRefs = data.vars.reduce(function (s, v) { return s + v.refs; }, 0);
       addLine(out, sp('td', data.vars.length + ' unique variable(s)  ' + totalRefs + ' total reference(s)'));
-    } catch (_) {
+    } catch (err) {
       loading.remove();
-      addLine(out, sp('tr', 'Request failed'));
+      addLine(out, sp('tr', 'Request failed: ' + esc(err.message || String(err))));
     }
   }
 
@@ -281,9 +281,9 @@
       addLine(out, '');
       var totalRefs = data.vars.reduce(function (s, v) { return s + v.refs; }, 0);
       addLine(out, sp('td', data.vars.length + ' unique variable(s)  ' + totalRefs + ' total reference(s)'));
-    } catch (_) {
+    } catch (err) {
       loading.remove();
-      addLine(out, sp('tr', 'Request failed'));
+      addLine(out, sp('tr', 'Request failed: ' + esc(err.message || String(err))));
     }
   }
 
@@ -311,8 +311,10 @@
   // ── helpers ──────────────────────────────────────────────────
   async function apiFetch(url) {
     var resp = await fetch(url);
-    if (!resp.ok && resp.status !== 400 && resp.status !== 404) throw new Error('HTTP ' + resp.status);
-    return resp.json();
+    var body;
+    try { body = await resp.json(); } catch (_) { body = {}; }
+    if (!resp.ok && !body.error) body.error = 'Server error (' + resp.status + ')';
+    return body;
   }
 
   function addLine(container, html) {

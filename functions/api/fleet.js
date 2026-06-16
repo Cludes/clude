@@ -23,7 +23,8 @@ export async function onRequest(context) {
   );
 
   if (resp.status === 404) return Response.json({ error: 'User not found' }, { status: 404 });
-  if (!resp.ok) return Response.json({ error: 'GitHub API error' }, { status: 502 });
+  if (resp.status === 403 || resp.status === 429) return Response.json({ error: 'GitHub rate limit exceeded. Try again in a minute.' }, { status: 429 });
+  if (!resp.ok) return Response.json({ error: 'GitHub API error (' + resp.status + ')' }, { status: 502 });
 
   const raw = await resp.json();
   const repos = raw.map(r => ({
