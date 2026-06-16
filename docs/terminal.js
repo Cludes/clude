@@ -30,6 +30,8 @@
     { prefix: 'log month',   fn: logMonth },
     { prefix: 'log week',    fn: logWeek },
     { prefix: 'env scan',    fn: envScan },
+    { prefix: 'help',        fn: showHelp },
+    { prefix: 'clear',       fn: clearTerm },
   ];
 
   // ── bootstrap ────────────────────────────────────────────────
@@ -72,7 +74,7 @@
       }
     }
     addLine(out, sp('tr', 'Unknown command.') +
-      ' Try: fleet audit &lt;user&gt;, log week|month &lt;user&gt;, env scan &lt;owner/repo&gt;');
+      ' Type ' + sp('tc', 'help') + ' to see available commands.');
   }
 
   // ── fleet audit ──────────────────────────────────────────────
@@ -186,10 +188,23 @@
 
   // ── env scan ─────────────────────────────────────────────────
   async function envScan(rawArg, out) {
-    if (!rawArg) { addLine(out, sp('tr', 'Usage: env scan &lt;owner/repo or GitHub URL&gt;')); return; }
-    var repo = parseRepoArg(rawArg);
-    if (!REPO_RE.test(repo)) { addLine(out, sp('tr', 'Invalid format. Use: owner/repo or paste a GitHub URL')); return; }
+    if (!rawArg) { addLine(out, sp('tr', 'Usage: env scan &lt;username&gt; or env scan &lt;owner/repo&gt;')); return; }
+    var parsed = parseRepoArg(rawArg);
 
+    // Detect user-level scan (no slash = just a username)
+    if (!parsed.includes('/')) {
+      var user = parsed;
+      if (!NAME_RE.test(user)) { addLine(out, sp('tr', 'Invalid username: ' + esc(user))); return; }
+      return envScanUser(user, out);
+    }
+
+    // Single repo scan
+    var repo = parsed;
+    if (!REPO_RE.test(repo)) { addLine(out, sp('tr', 'Invalid format. Use: owner/repo or paste a GitHub URL')); return; }
+    return envScanRepo(repo, out);
+  }
+
+  async function envScanRepo(repo, out) {
     var loading = addLine(out, sp('td', 'Scanning ' + esc(repo) + ' for env var usage...'));
     try {
       var data = await apiFetch('/api/env?repo=' + encodeURIComponent(repo));
@@ -199,7 +214,7 @@
       addLine(out, '');
       addLine(out,
         sp('bold', 'Env Scan') + '  ' + sp('tc', esc(repo)) +
-        '  ' + sp('td', data.files_scanned + ' files scanned')
+        '  ' + sp('td', data.files_scanned + ' file(s) scanned')
       );
       addLine(out, '');
 
@@ -227,6 +242,70 @@
       loading.remove();
       addLine(out, sp('tr', 'Request failed'));
     }
+  }
+
+  async function envScanUser(user, out) {
+    var loading = addLine(out, sp('td', 'Scanning all repos for ' + esc(user) + '... (this may take a moment)'));
+    try {
+      var data = await apiFetch('/api/env?user=' + encodeURIComponent(user));
+      loading.remove();
+      if (data.error) { addLine(out, sp('tr', esc(data.error))); return; }
+
+      addLine(out, '');
+      addLine(out,
+        sp('bold', 'Env Scan') + '  ' + sp('tc', esc(user)) +
+        '  ' + sp('td',
+          data.repos_scanned + '/' + data.repos_checked + ' repos with vars' +
+          '  ' + data.files_scanned + ' file(s) scanned'
+        )
+      );
+      addLine(out, '');
+
+      if (!data.vars || data.vars.length === 0) {
+        addLine(out, sp('td', 'No environment variable usage found across public repos.'));
+        return;
+      }
+
+      var w = clamp(16, 40, maxLen(data.vars, function (v) { return v.name.length; }));
+      addLine(out, sp('td', pE(w, 'Variable') + pS(8, 'Refs') + '  Repos'));
+      addLine(out, sp('td', '─'.repeat(w + 8 + 30)));
+
+      data.vars.forEach(function (v) {
+        var repos = v.repos.slice(0, 3).join(', ') + (v.repos.length > 3 ? ' +' + (v.repos.length - 3) : '');
+        addLine(out,
+          sp('tc bold', pE(w, v.name)) +
+          sp('tm', pS(8, v.refs)) +
+          '  ' + sp('td', esc(repos))
+        );
+      });
+      addLine(out, '');
+      var totalRefs = data.vars.reduce(function (s, v) { return s + v.refs; }, 0);
+      addLine(out, sp('td', data.vars.length + ' unique variable(s)  ' + totalRefs + ' total reference(s)'));
+    } catch (_) {
+      loading.remove();
+      addLine(out, sp('tr', 'Request failed'));
+    }
+  }
+
+  // ── help ─────────────────────────────────────────────────────
+  function showHelp(_, out) {
+    addLine(out, '');
+    addLine(out, sp('bold', 'Available commands'));
+    addLine(out, '');
+    addLine(out, '  ' + sp('tc', 'fleet audit') + ' &lt;user&gt;          List all public repos for a GitHub user');
+    addLine(out, '  ' + sp('tc', 'log week') + '   &lt;user&gt;          Show commits from the past 7 days');
+    addLine(out, '  ' + sp('tc', 'log month') + '  &lt;user&gt;          Show commits from the past 30 days');
+    addLine(out, '  ' + sp('tc', 'env scan') + '   &lt;user&gt;          Scan all repos for env var usage');
+    addLine(out, '  ' + sp('tc', 'env scan') + '   &lt;owner/repo&gt;    Scan a single repo for env var usage');
+    addLine(out, '  ' + sp('tc', 'clear') + '                      Clear the terminal');
+    addLine(out, '');
+    addLine(out, sp('td', 'All commands accept a GitHub URL in place of a username or repo.'));
+    addLine(out, '');
+  }
+
+  // ── clear ─────────────────────────────────────────────────────
+  function clearTerm(_, out) {
+    out.innerHTML = '';
   }
 
   // ── helpers ──────────────────────────────────────────────────

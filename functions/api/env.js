@@ -1,4 +1,5 @@
 const REPO_RE = /^[a-zA-Z0-9._-]{1,100}\/[a-zA-Z0-9._-]{1,100}$/;
+const NAME_RE = /^[a-zA-Z0-9._-]{1,100}$/;
 const SKIP_DIRS = new Set([
   'node_modules', '__pycache__', '.venv', 'venv', 'dist', 'build',
   '.next', 'target', '.cache', '.turbo', 'vendor',
@@ -32,28 +33,18 @@ function fileExt(path) {
   return i >= 0 ? path.slice(i) : '';
 }
 
-export async function onRequest(context) {
-  const { searchParams } = new URL(context.request.url);
-  const repo = searchParams.get('repo') || '';
-
-  if (!REPO_RE.test(repo)) {
-    return Response.json({ error: 'Invalid repo (use owner/repo)' }, { status: 400 });
-  }
-
-  const token = context.env.GITHUB_TOKEN;
-  const headers = ghHeaders(token);
-
-  const repoResp = await fetch(`https://api.github.com/repos/${repo}`, { headers });
-  if (repoResp.status === 404) return Response.json({ error: 'Repo not found' }, { status: 404 });
-  if (!repoResp.ok) return Response.json({ error: 'GitHub API error' }, { status: 502 });
+// Scan a single repo; returns { vars, files_scanned } or null on fetch failure.
+async function scanRepo(repoFullName, headers, maxFiles = 20) {
+  const repoResp = await fetch(`https://api.github.com/repos/${repoFullName}`, { headers });
+  if (!repoResp.ok) return null;
   const repoData = await repoResp.json();
   const branch = repoData.default_branch || 'main';
 
   const treeResp = await fetch(
-    `https://api.github.com/repos/${repo}/git/trees/${branch}?recursive=1`,
+    `https://api.github.com/repos/${repoFullName}/git/trees/${branch}?recursive=1`,
     { headers }
   );
-  if (!treeResp.ok) return Response.json({ error: 'Could not fetch repo tree' }, { status: 502 });
+  if (!treeResp.ok) return null;
   const { tree = [] } = await treeResp.json();
 
   const files = tree
@@ -62,17 +53,15 @@ export async function onRequest(context) {
       SUPPORTED.has(fileExt(item.path)) &&
       !item.path.split('/').some(p => SKIP_DIRS.has(p))
     )
-    .slice(0, 20);
+    .slice(0, maxFiles);
 
-  if (files.length === 0) {
-    return Response.json({ repo, vars: [], files_scanned: 0 });
-  }
+  if (files.length === 0) return { vars: [], files_scanned: 0 };
 
   const rawHeaders = { ...headers, 'Accept': 'application/vnd.github.raw+json' };
   const scanResults = await Promise.all(
     files.map(async file => {
       const resp = await fetch(
-        `https://api.github.com/repos/${repo}/contents/${file.path}`,
+        `https://api.github.com/repos/${repoFullName}/contents/${file.path}`,
         { headers: rawHeaders }
       );
       if (!resp.ok) return [];
@@ -102,5 +91,143 @@ export async function onRequest(context) {
     .map(v => ({ name: v.name, refs: v.refs, files: [...v.files] }))
     .sort((a, b) => a.name.localeCompare(b.name));
 
-  return Response.json({ repo, vars, files_scanned: files.length });
+  return { vars, files_scanned: files.length };
 }
+
+export async function onRequest(context) {
+  const { searchParams } = new URL(context.request.url);
+  const repo = searchParams.get('repo') || '';
+  const user = searchParams.get('user') || '';
+
+  const token = context.env.GITHUB_TOKEN;
+  const headers = ghHeaders(token);
+
+  // ── Single repo mode ──────────────────────────────────────────
+  if (repo) {
+    if (!REPO_RE.test(repo)) {
+      return Response.json({ error: 'Invalid repo (use owner/repo)' }, { status: 400 });
+    }
+
+    const repoResp = await fetch(`https://api.github.com/repos/${repo}`, { headers });
+    if (repoResp.status === 404) return Response.json({ error: 'Repo not found' }, { status: 404 });
+    if (!repoResp.ok) return Response.json({ error: 'GitHub API error' }, { status: 502 });
+    const repoData = await repoResp.json();
+    const branch = repoData.default_branch || 'main';
+
+    const treeResp = await fetch(
+      `https://api.github.com/repos/${repo}/git/trees/${branch}?recursive=1`,
+      { headers }
+    );
+    if (!treeResp.ok) return Response.json({ error: 'Could not fetch repo tree' }, { status: 502 });
+    const { tree = [] } = await treeResp.json();
+
+    const files = tree
+      .filter(item =>
+        item.type === 'blob' &&
+        SUPPORTED.has(fileExt(item.path)) &&
+        !item.path.split('/').some(p => SKIP_DIRS.has(p))
+      )
+      .slice(0, 20);
+
+    if (files.length === 0) {
+      return Response.json({ repo, vars: [], files_scanned: 0 });
+    }
+
+    const rawHeaders = { ...headers, 'Accept': 'application/vnd.github.raw+json' };
+    const scanResults = await Promise.all(
+      files.map(async file => {
+        const resp = await fetch(
+          `https://api.github.com/repos/${repo}/contents/${file.path}`,
+          { headers: rawHeaders }
+        );
+        if (!resp.ok) return [];
+        const content = await resp.text();
+        const patterns = PATTERNS[fileExt(file.path)] || [];
+        const found = [];
+        for (const [source, flags] of patterns) {
+          const re = new RegExp(source, flags);
+          for (const m of content.matchAll(re)) {
+            found.push({ name: m[1], file: file.path });
+          }
+        }
+        return found;
+      })
+    );
+
+    const byName = {};
+    for (const results of scanResults) {
+      for (const { name, file } of results) {
+        if (!byName[name]) byName[name] = { name, refs: 0, files: new Set() };
+        byName[name].refs++;
+        byName[name].files.add(file);
+      }
+    }
+
+    const vars = Object.values(byName)
+      .map(v => ({ name: v.name, refs: v.refs, files: [...v.files] }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+
+    return Response.json({ repo, vars, files_scanned: files.length });
+  }
+
+  // ── User (all repos) mode ─────────────────────────────────────
+  if (user) {
+    if (!NAME_RE.test(user)) {
+      return Response.json({ error: 'Invalid username' }, { status: 400 });
+    }
+
+    // Fetch public repos sorted by most recently pushed
+    const reposResp = await fetch(
+      `https://api.github.com/users/${user}/repos?per_page=100&type=public&sort=pushed`,
+      { headers }
+    );
+    if (reposResp.status === 404) return Response.json({ error: 'User not found' }, { status: 404 });
+    if (!reposResp.ok) return Response.json({ error: 'GitHub API error' }, { status: 502 });
+
+    const allRepos = await reposResp.json();
+    const activeRepos = allRepos
+      .filter(r => !r.archived && !r.fork)
+      .slice(0, 12); // scan up to 12 repos, 5 files each = ~60 API calls
+
+    if (activeRepos.length === 0) {
+      return Response.json({ user, by_repo: {}, total_vars: 0, repos_scanned: 0, files_scanned: 0 });
+    }
+
+    // Scan repos in parallel (5 files max each to stay within rate limits)
+    const results = await Promise.all(
+      activeRepos.map(r => scanRepo(r.full_name, headers, 5).then(res => ({ repo: r.full_name, res })))
+    );
+
+    // Aggregate: global var map + per-repo breakdown
+    const globalVars = {};
+    const byRepo = {};
+    let totalFiles = 0;
+
+    for (const { repo: repoName, res } of results) {
+      if (!res || res.vars.length === 0) continue;
+      byRepo[repoName] = res.vars;
+      totalFiles += res.files_scanned;
+      for (const v of res.vars) {
+        if (!globalVars[v.name]) globalVars[v.name] = { name: v.name, refs: 0, repos: new Set() };
+        globalVars[v.name].refs += v.refs;
+        globalVars[v.name].repos.add(repoName.split('/')[1]); // just the repo name
+      }
+    }
+
+    const vars = Object.values(globalVars)
+      .map(v => ({ name: v.name, refs: v.refs, repos: [...v.repos].sort() }))
+      .sort((a, b) => b.refs - a.refs); // sort by most used
+
+    return Response.json({
+      user,
+      vars,
+      by_repo: byRepo,
+      repos_scanned: Object.keys(byRepo).length,
+      repos_checked: activeRepos.length,
+      files_scanned: totalFiles,
+    });
+  }
+
+  return Response.json({ error: 'Provide ?repo=owner/repo or ?user=username' }, { status: 400 });
+}
+
