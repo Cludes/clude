@@ -24,8 +24,8 @@ jobs:
         run: |
           npm install -g wrangler
           for i in 1 2 3; do
-            wrangler pages project create clude --production-branch=master && break
+            wrangler pages project create clude-cli --production-branch=master && break
             echo "Attempt $i failed, retrying in 10s..."
             sleep 10
           done || true
-          wrangler pages deploy docs --project-name=clude --commit-dirty=true
+          wrangler pages deploy docs --project-name=clude-cli --commit-dirty=true
