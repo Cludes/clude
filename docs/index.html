@@ -30,7 +30,7 @@
         <h1>Your developer workspace,<br><span class="accent">under control.</span></h1>
         <p class="hero-sub">One CLI to audit env vars across every language, check the health of every repo in your workspace, and log your git activity across all projects at once.</p>
         <div class="install-cta">
-          <code class="install-cmd" id="install-cmd">pip install clude</code>
+          <code class="install-cmd" id="install-cmd">pipx install clude</code>
           <button class="copy-btn" id="copy-btn" aria-label="Copy install command">Copy</button>
         </div>
         <p class="install-note">Supports JS &middot; TS &middot; Python &middot; Go &middot; Ruby &middot; Rust</p>
@@ -204,7 +204,8 @@ STRIPE_SECRET_KEY=</pre>
           <div class="step-num" aria-hidden="true">1</div>
           <div class="step-content">
             <h3>Install</h3>
-            <pre class="code-block"><code>pip install clude</code></pre>
+            <pre class="code-block"><code>pipx install clude</code></pre>
+            <p class="step-note">pipx puts the <code>clude</code> command on your PATH automatically. No pipx? Run <code>pip install clude</code>, then call it as <code>python -m clude</code> - works on any OS with no PATH setup.</p>
           </div>
         </div>
 
