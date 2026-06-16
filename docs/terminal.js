@@ -4,6 +4,27 @@
   var NAME_RE = /^[a-zA-Z0-9._-]{1,100}$/;
   var REPO_RE = /^[a-zA-Z0-9._-]{1,100}\/[a-zA-Z0-9._-]{1,100}$/;
 
+  // Strip a GitHub URL down to its path components.
+  // https://github.com/Cludes/net-toolbox  ->  Cludes/net-toolbox
+  // https://github.com/torvalds            ->  torvalds
+  // Cludes/net-toolbox                     ->  Cludes/net-toolbox (unchanged)
+  function stripGitHub(s) {
+    var m = s.trim().match(/^(?:https?:\/\/)?(?:www\.)?github\.com\/([^\s?#]+)/i);
+    return m ? m[1].replace(/\/+$/, '') : s.trim();
+  }
+
+  // For commands expecting a username - if a full repo path is pasted, take owner only.
+  function parseNameArg(s) {
+    var p = stripGitHub(s).split('/');
+    return p[0];
+  }
+
+  // For commands expecting owner/repo.
+  function parseRepoArg(s) {
+    var p = stripGitHub(s).split('/');
+    return p.length >= 2 ? p[0] + '/' + p[1] : p[0];
+  }
+
   var COMMANDS = [
     { prefix: 'fleet audit', fn: fleetAudit },
     { prefix: 'log week',    fn: logWeek },
@@ -54,9 +75,10 @@
   }
 
   // ── fleet audit ──────────────────────────────────────────────
-  async function fleetAudit(user, out) {
-    if (!user) { addLine(out, sp('tr', 'Usage: fleet audit &lt;github-username&gt;')); return; }
-    if (!NAME_RE.test(user)) { addLine(out, sp('tr', 'Invalid username')); return; }
+  async function fleetAudit(rawArg, out) {
+    if (!rawArg) { addLine(out, sp('tr', 'Usage: fleet audit &lt;github-username or URL&gt;')); return; }
+    var user = parseNameArg(rawArg);
+    if (!NAME_RE.test(user)) { addLine(out, sp('tr', 'Invalid username: ' + esc(user))); return; }
 
     var loading = addLine(out, sp('td', 'Fetching repos for ' + esc(user) + '...'));
     try {
@@ -97,9 +119,10 @@
   }
 
   // ── log week ─────────────────────────────────────────────────
-  async function logWeek(user, out) {
-    if (!user) { addLine(out, sp('tr', 'Usage: log week &lt;github-username&gt;')); return; }
-    if (!NAME_RE.test(user)) { addLine(out, sp('tr', 'Invalid username')); return; }
+  async function logWeek(rawArg, out) {
+    if (!rawArg) { addLine(out, sp('tr', 'Usage: log week &lt;github-username or URL&gt;')); return; }
+    var user = parseNameArg(rawArg);
+    if (!NAME_RE.test(user)) { addLine(out, sp('tr', 'Invalid username: ' + esc(user))); return; }
 
     var loading = addLine(out, sp('td', 'Fetching activity for ' + esc(user) + '...'));
     try {
@@ -145,9 +168,10 @@
   }
 
   // ── env scan ─────────────────────────────────────────────────
-  async function envScan(repo, out) {
-    if (!repo) { addLine(out, sp('tr', 'Usage: env scan &lt;owner/repo&gt;')); return; }
-    if (!REPO_RE.test(repo)) { addLine(out, sp('tr', 'Invalid format. Use: owner/repo')); return; }
+  async function envScan(rawArg, out) {
+    if (!rawArg) { addLine(out, sp('tr', 'Usage: env scan &lt;owner/repo or GitHub URL&gt;')); return; }
+    var repo = parseRepoArg(rawArg);
+    if (!REPO_RE.test(repo)) { addLine(out, sp('tr', 'Invalid format. Use: owner/repo or paste a GitHub URL')); return; }
 
     var loading = addLine(out, sp('td', 'Scanning ' + esc(repo) + ' for env var usage...'));
     try {

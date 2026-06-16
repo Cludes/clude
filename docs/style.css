@@ -448,7 +448,7 @@ section { padding: 5rem 2rem; }
   max-height: 400px;
   overflow-y: auto;
   white-space: pre-wrap;
-  word-break: break-all;
+  overflow-wrap: anywhere;
 }
 .term-line { display: block; min-height: 1.4em; }
 .term-example {
