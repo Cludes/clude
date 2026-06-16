@@ -220,6 +220,7 @@
 
       if (data.vars.length === 0) {
         addLine(out, sp('td', 'No environment variable usage found.'));
+        renderSecrets(out, data.secrets, false);
         return;
       }
 
@@ -238,6 +239,7 @@
       addLine(out, '');
       var totalRefs = data.vars.reduce(function (s, v) { return s + v.refs; }, 0);
       addLine(out, sp('td', data.vars.length + ' unique variable(s)  ' + totalRefs + ' total reference(s)'));
+      renderSecrets(out, data.secrets, false);
     } catch (err) {
       loading.remove();
       addLine(out, sp('tr', 'Request failed: ' + esc(err.message || String(err))));
@@ -263,6 +265,7 @@
 
       if (!data.vars || data.vars.length === 0) {
         addLine(out, sp('td', 'No environment variable usage found across public repos.'));
+        renderSecrets(out, data.secrets, true);
         return;
       }
 
@@ -281,10 +284,29 @@
       addLine(out, '');
       var totalRefs = data.vars.reduce(function (s, v) { return s + v.refs; }, 0);
       addLine(out, sp('td', data.vars.length + ' unique variable(s)  ' + totalRefs + ' total reference(s)'));
+      renderSecrets(out, data.secrets, true);
     } catch (err) {
       loading.remove();
       addLine(out, sp('tr', 'Request failed: ' + esc(err.message || String(err))));
     }
+  }
+
+  // Render the "potential secrets" section (shared by repo + user scans).
+  function renderSecrets(out, secrets, includeRepo) {
+    if (!secrets || !secrets.length) return;
+    addLine(out, '');
+    addLine(out, sp('tr bold', 'Potential secrets') + '  ' +
+      sp('td', secrets.length + ' match(es) - public repos, verify before acting'));
+    var w = clamp(16, 30, maxLen(secrets, function (s) { return s.type.length; }));
+    secrets.slice(0, 50).forEach(function (s) {
+      var loc = includeRepo && s.repo ? s.repo + ':' + s.file : s.file;
+      addLine(out,
+        '  ' + sp('tr', pE(w, s.type)) +
+        '  ' + sp('ty', pE(16, s.preview)) +
+        '  ' + sp('td', esc(loc))
+      );
+    });
+    if (secrets.length > 50) addLine(out, sp('td', '  ... and ' + (secrets.length - 50) + ' more'));
   }
 
   // ── help ─────────────────────────────────────────────────────
@@ -295,8 +317,8 @@
     addLine(out, '  ' + sp('tc', 'fleet audit') + ' &lt;user&gt;          List all public repos for a GitHub user');
     addLine(out, '  ' + sp('tc', 'log week') + '   &lt;user&gt;          Show commits from the past 7 days');
     addLine(out, '  ' + sp('tc', 'log month') + '  &lt;user&gt;          Show commits from the past 30 days');
-    addLine(out, '  ' + sp('tc', 'env scan') + '   &lt;user&gt;          Scan all repos for env var usage');
-    addLine(out, '  ' + sp('tc', 'env scan') + '   &lt;owner/repo&gt;    Scan a single repo for env var usage');
+    addLine(out, '  ' + sp('tc', 'env scan') + '   &lt;user&gt;          Scan all repos for env vars + exposed secrets');
+    addLine(out, '  ' + sp('tc', 'env scan') + '   &lt;owner/repo&gt;    Scan a single repo for env vars + exposed secrets');
     addLine(out, '  ' + sp('tc', 'clear') + '                      Clear the terminal');
     addLine(out, '');
     addLine(out, sp('td', 'All commands accept a GitHub URL in place of a username or repo.'));
