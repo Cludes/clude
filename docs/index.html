@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="clude is a developer workspace CLI that audits env vars, checks multi-repo health, and logs git activity across all your projects.">
+  <title>clude — developer workspace CLI</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <a class="skip-link" href="#main">Skip to main content</a>
+
+  <header class="site-header">
+    <nav class="nav" aria-label="Main navigation">
+      <span class="nav-logo">clude</span>
+      <div class="nav-links">
+        <a href="#features">Features</a>
+        <a href="#usage">Usage</a>
+        <a href="#install">Install</a>
+        <a href="https://github.com/Cludes/clude" target="_blank" rel="noopener noreferrer" class="nav-gh">GitHub &nearr;</a>
+      </div>
+    </nav>
+
+    <div class="hero" id="main">
+      <div class="hero-text">
+        <div class="badge">v0.1.0 &middot; MIT &middot; Python 3.10+</div>
+        <h1>Your developer workspace,<br><span class="accent">under control.</span></h1>
+        <p class="hero-sub">One CLI to audit env vars across every language, check the health of every repo in your workspace, and log your git activity across all projects at once.</p>
+        <div class="install-cta">
+          <code class="install-cmd" id="install-cmd">pip install clude</code>
+          <button class="copy-btn" id="copy-btn" aria-label="Copy install command">Copy</button>
+        </div>
+        <p class="install-note">Supports JS &middot; TS &middot; Python &middot; Go &middot; Ruby &middot; Rust</p>
+      </div>
+
+      <div class="hero-terminal" aria-label="Example fleet audit output" role="img">
+        <div class="term-bar">
+          <span class="dot dot-red" aria-hidden="true"></span>
+          <span class="dot dot-yellow" aria-hidden="true"></span>
+          <span class="dot dot-green" aria-hidden="true"></span>
+          <span class="term-title">Terminal</span>
+        </div>
+        <pre class="term-body" aria-label="clude fleet audit example output"><span class="tp">$</span> clude fleet audit ~/Documents
+
+<span class="tt">╭──────────────────────┬─────────────┬──────────┬────────┬───────╮
+│ Repository           │ Last Commit │ Changes  │  Sync  │ Stale │
+├──────────────────────┼─────────────┼──────────┼────────┼───────┤
+│ my-api               │   2h ago   │  <span class="tg">clean</span>   │ <span class="tg">synced</span> │  <span class="tg">0</span>    │
+│ frontend             │  yesterday  │  <span class="ty">3</span>       │  <span class="tb">+2</span>    │  <span class="tg">0</span>    │
+│ mobile-app           │   5d ago   │  <span class="tg">clean</span>   │ <span class="tg">synced</span> │  <span class="ty">1</span>    │
+│ legacy-backend       │  1mo ago   │  <span class="tg">clean</span>   │  <span class="tr">-8</span>    │  <span class="ty">3</span>    │
+│ data-pipeline        │  3mo ago   │  <span class="ty">14</span>      │ <span class="tg">synced</span> │  <span class="ty">2</span>    │
+╰──────────────────────┴─────────────┴──────────┴────────┴───────╯</span>
+<span class="td">5 repositories scanned.</span></pre>
+      </div>
+    </div>
+  </header>
+
+  <main>
+
+    <section class="features" id="features" aria-labelledby="features-heading">
+      <h2 class="section-title" id="features-heading">Three tools. One command.</h2>
+      <div class="feature-grid">
+
+        <div class="feature-card">
+          <div class="feature-icon" aria-hidden="true">ENV</div>
+          <h3>env <span class="feature-tag">audit</span></h3>
+          <p>Static analysis across JS, TS, Python, Go, Ruby, and Rust. Find every env var your code references, validate against your <code>.env</code>, and auto-generate a <code>.env.example</code>.</p>
+          <ul class="cmd-list" aria-label="env commands">
+            <li><code>env scan</code><span>find all env var usage in source</span></li>
+            <li><code>env validate</code><span>diff .env against discovered vars</span></li>
+            <li><code>env generate</code><span>write .env.example automatically</span></li>
+          </ul>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon" aria-hidden="true">FLT</div>
+          <h3>fleet <span class="feature-tag">health</span></h3>
+          <p>Scan every git repo in a directory in seconds. See last commit, uncommitted changes, ahead/behind remote, stale branches - and optionally GitHub PRs and CI status.</p>
+          <ul class="cmd-list" aria-label="fleet commands">
+            <li><code>fleet audit</code><span>health dashboard for all repos</span></li>
+            <li><code>fleet report</code><span>export health report to markdown</span></li>
+          </ul>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon" aria-hidden="true">LOG</div>
+          <h3>log <span class="feature-tag">activity</span></h3>
+          <p>What did you actually ship this week? Across 50 repos? <code>clude log week</code> answers that in under a second - grouped by repo, filtered to your commits, ready to paste into your standup.</p>
+          <ul class="cmd-list" aria-label="log commands">
+            <li><code>log today</code><span>today's commits across all repos</span></li>
+            <li><code>log week</code><span>past 7 days grouped by repo</span></li>
+            <li><code>log export</code><span>markdown report with --since</span></li>
+          </ul>
+        </div>
+
+      </div>
+    </section>
+
+    <section class="usage" id="usage" aria-labelledby="usage-heading">
+      <h2 class="section-title" id="usage-heading">See it in action</h2>
+      <div class="usage-grid">
+
+        <div class="usage-block">
+          <h3>env scan &amp; validate</h3>
+          <pre class="term-mini" aria-label="env scan output"><span class="tp">$</span> clude env validate ./my-project
+
+<span class="tr bold">Missing from .env  (1)</span>
+  <span class="tr">x</span>  STRIPE_SECRET_KEY
+
+<span class="ty bold">Defined but not in code  (1)</span>
+  <span class="ty">!</span>  LEGACY_API_KEY
+
+<span class="tg bold">Present and used  (3)</span>
+  <span class="tg">ok</span> DATABASE_URL
+  <span class="tg">ok</span> JWT_SECRET
+  <span class="tg">ok</span> REDIS_URL
+
+<span class="tr">1 required variable missing from .env</span></pre>
+        </div>
+
+        <div class="usage-block">
+          <h3>log week</h3>
+          <pre class="term-mini" aria-label="log week output"><span class="tp">$</span> clude log week ~/projects
+
+<span class="bold">Past 7 Days</span>  <span class="td">23 commits &middot; 5 repos</span>
+
+<span class="tc bold">api-server</span> <span class="td">(8 commits)</span>
+  <span class="td">Mon Jun 10</span>  <span class="ty">a3f8c2e</span>  Add rate limiting
+  <span class="td">Mon Jun 10</span>  <span class="ty">b91d4a7</span>  Fix JWT expiry edge case
+  <span class="td">Tue Jun 11</span>  <span class="ty">c44e8f1</span>  Add health check endpoint
+
+<span class="tc bold">frontend</span> <span class="td">(3 commits)</span>
+  <span class="td">Wed Jun 12</span>  <span class="ty">d77a2b9</span>  Redesign dashboard
+  <span class="td">Thu Jun 13</span>  <span class="ty">e12c5d3</span>  Add dark mode toggle</pre>
+        </div>
+
+        <div class="usage-block">
+          <h3>env generate</h3>
+          <pre class="term-mini" aria-label="env generate output"><span class="tp">$</span> clude env generate ./my-project
+<span class="tg">ok</span>  Wrote <span class="bold">6</span> variables to <span class="tc">.env.example</span>
+
+<span class="tp">$</span> cat .env.example
+<span class="td"># Generated by clude env generate</span>
+
+DATABASE_URL=
+JWT_SECRET=
+PORT=
+REDIS_URL=
+SMTP_HOST=
+STRIPE_SECRET_KEY=</pre>
+        </div>
+
+      </div>
+    </section>
+
+    <section class="get-started" id="install" aria-labelledby="install-heading">
+      <h2 class="section-title" id="install-heading">Get started in seconds</h2>
+      <div class="steps">
+
+        <div class="step">
+          <div class="step-num" aria-hidden="true">1</div>
+          <div class="step-content">
+            <h3>Install</h3>
+            <pre class="code-block"><code>pip install clude</code></pre>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num" aria-hidden="true">2</div>
+          <div class="step-content">
+            <h3>Point it at your workspace</h3>
+            <pre class="code-block"><code>clude fleet audit ~/Documents
+clude log week ~/Documents</code></pre>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num" aria-hidden="true">3</div>
+          <div class="step-content">
+            <h3>Optional: GitHub enrichment</h3>
+            <pre class="code-block"><code>export GITHUB_TOKEN=ghp_...
+export GITHUB_USER=yourname
+clude fleet audit --github-user yourname</code></pre>
+            <p class="step-note">Adds open PRs, issues, and CI status to the fleet table.</p>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <span class="footer-logo">clude</span>
+      <span class="sep" aria-hidden="true">&middot;</span>
+      <span>MIT License</span>
+      <span class="sep" aria-hidden="true">&middot;</span>
+      <a href="https://github.com/Cludes/clude" target="_blank" rel="noopener noreferrer">View on GitHub &nearr;</a>
+      <span class="sep" aria-hidden="true">&middot;</span>
+      <span>Made by <a href="https://github.com/Cludes" target="_blank" rel="noopener noreferrer">Cludes</a></span>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>

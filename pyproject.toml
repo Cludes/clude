@@ -1,0 +1,20 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "clude"
+version = "0.1.0"
+description = "Developer workspace CLI - env auditing, multi-repo health, and git activity"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+dependencies = [
+    "click>=8.1",
+    "rich>=13.0",
+]
+
+[project.scripts]
+clude = "clude.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/clude"]
