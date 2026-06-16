@@ -27,6 +27,7 @@
 
   var COMMANDS = [
     { prefix: 'fleet audit', fn: fleetAudit },
+    { prefix: 'log month',   fn: logMonth },
     { prefix: 'log week',    fn: logWeek },
     { prefix: 'env scan',    fn: envScan },
   ];
@@ -71,7 +72,7 @@
       }
     }
     addLine(out, sp('tr', 'Unknown command.') +
-      ' Try: fleet audit &lt;user&gt;, log week &lt;user&gt;, env scan &lt;owner/repo&gt;');
+      ' Try: fleet audit &lt;user&gt;, log week|month &lt;user&gt;, env scan &lt;owner/repo&gt;');
   }
 
   // ── fleet audit ──────────────────────────────────────────────
@@ -120,13 +121,24 @@
 
   // ── log week ─────────────────────────────────────────────────
   async function logWeek(rawArg, out) {
-    if (!rawArg) { addLine(out, sp('tr', 'Usage: log week &lt;github-username or URL&gt;')); return; }
+    return logActivity(rawArg, 7, out);
+  }
+
+  // ── log month ────────────────────────────────────────────────
+  async function logMonth(rawArg, out) {
+    return logActivity(rawArg, 30, out);
+  }
+
+  async function logActivity(rawArg, days, out) {
+
+    if (!rawArg) { addLine(out, sp('tr', 'Usage: log week|month &lt;github-username or URL&gt;')); return; }
     var user = parseNameArg(rawArg);
     if (!NAME_RE.test(user)) { addLine(out, sp('tr', 'Invalid username: ' + esc(user))); return; }
 
+    var label = days === 30 ? 'Past 30 Days' : 'Past 7 Days';
     var loading = addLine(out, sp('td', 'Fetching activity for ' + esc(user) + '...'));
     try {
-      var data = await apiFetch('/api/log?user=' + encodeURIComponent(user) + '&days=7');
+      var data = await apiFetch('/api/log?user=' + encodeURIComponent(user) + '&days=' + days);
       loading.remove();
       if (data.error) { addLine(out, sp('tr', esc(data.error))); return; }
 
@@ -134,13 +146,13 @@
       var total = repoNames.reduce(function (s, r) { return s + data.by_repo[r].length; }, 0);
 
       if (total === 0) {
-        addLine(out, sp('td', 'No public commits found in the past 7 days for ' + esc(user) + '.'));
+        addLine(out, sp('td', 'No public commits found in the past ' + days + ' days for ' + esc(user) + '.'));
         return;
       }
 
       addLine(out, '');
       addLine(out,
-        sp('bold', 'Past 7 Days') + '  ' + sp('tc', esc(user)) +
+        sp('bold', label) + '  ' + sp('tc', esc(user)) +
         '  ' + sp('td', total + ' commit(s) across ' + repoNames.length + ' repo(s)')
       );
       addLine(out, '');
