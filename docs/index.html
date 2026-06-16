@@ -230,8 +230,13 @@ python -m clude --version</code></pre>
             <h3>Point it at your workspace</h3>
             <pre class="code-block"><code>clude fleet audit ~/Documents
 clude log week ~/Documents
-clude env scan ~/Documents/my-project</code></pre>
-            <p class="step-note">On Windows <code>cmd.exe</code> use a full path like <code>%USERPROFILE%\Documents</code> - cmd doesn't expand <code>~</code>. PowerShell, macOS, and Linux expand it fine.</p>
+clude env scan ~/Documents/my-project
+
+# no PATH setup? prefix any command with python -m:
+python -m clude fleet audit ~/Documents
+python -m clude log week ~/Documents
+python -m clude env scan ~/Documents/my-project</code></pre>
+            <p class="step-note">Every command works either way. On Windows <code>cmd.exe</code> use a full path like <code>%USERPROFILE%\Documents</code> - cmd doesn't expand <code>~</code>. PowerShell, macOS, and Linux expand it fine.</p>
           </div>
         </div>
 
@@ -241,7 +246,8 @@ clude env scan ~/Documents/my-project</code></pre>
             <h3>Optional: GitHub enrichment</h3>
             <pre class="code-block"><code>export GITHUB_TOKEN=ghp_...
 export GITHUB_USER=yourname
-clude fleet audit --github-user yourname</code></pre>
+clude fleet audit --github-user yourname
+# or: python -m clude fleet audit --github-user yourname</code></pre>
             <p class="step-note">Adds open PRs, issues, and CI status to the fleet table.</p>
           </div>
         </div>
